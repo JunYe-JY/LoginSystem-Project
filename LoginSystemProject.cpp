@@ -25,6 +25,10 @@ void delExtraChar(string &str){ //function that is called to delete extra charac
     str.erase(std::remove(str.begin(), str.end(), '/'), str.end());
     str.erase(std::remove(str.begin(), str.end(), '('), str.end());
     str.erase(std::remove(str.begin(), str.end(), ')'), str.end());
+    str.erase(std::remove(str.begin(), str.end(), '#'), str.end());
+    str.erase(std::remove(str.begin(), str.end(), '$'), str.end());
+    str.erase(std::remove(str.begin(), str.end(), '\n'), str.end());
+
 }
 
 bool checkForUsersFile(){ //function that checks users.txt file exists
@@ -32,10 +36,6 @@ bool checkForUsersFile(){ //function that checks users.txt file exists
     file.open("users.txt");
     if (file){
         return true;
-    }
-    else{
-        cout << "ERROR OPENING FILE" << endl;
-        return false;
     }
     return false;
 }
@@ -68,6 +68,25 @@ int loginSystemChoice(){ //function that asks for user option for switch case
         keyboardBuffer();
     }
     return userChoice;
+}
+
+bool changeDataFunction(vector <string> textData, string input, int index){
+    int i;
+    ofstream fileCredentialsWrite;
+    fileCredentialsWrite.open("users.txt");
+    if (fileCredentialsWrite.fail()){
+        cout << "--File could not be opened--" << endl;
+        return false;
+    }
+    for (i = 0; i < textData.size(); i++){
+        if (i != index){
+            fileCredentialsWrite << textData[i] << endl;
+        }
+        else{
+            fileCredentialsWrite << input << endl;
+        }
+    }
+    return true;
 }
 
 bool validateNumbers(string& input){ //function that checks if the DOB is the appropriate length
@@ -106,7 +125,7 @@ bool validateMonth(string& input){ //function that checks if the Month is valid
         cout << endl << "--INVALID INPUT: Month Does Not Exist--" << endl;
         cout << endl << "[FORMAT: 00/00/0000]" << endl;
         cout << "ENTER DATE OF BIRTH: ";
-        cin >> input;
+        getline(cin, input);
         delExtraChar(input);
         temp = input.substr(0, 2);
         month = stoi(temp);
@@ -124,7 +143,7 @@ bool validateDate(string& input){ //function that checks if the Date is valid
         cout << endl << "--INVALID INPUT: Date Does Not Exist--" << endl;
         cout << endl << "[FORMAT: 00/00/0000]" << endl;
         cout << "ENTER DATE OF BIRTH: ";
-        cin >> input;
+        getline(cin, input);
         delExtraChar(input);
         temp = input.substr(2, 2);
         date = stoi(temp);
@@ -141,7 +160,7 @@ bool validateYear(string& input){ //function that checks if the Year is valid
         cout << endl << "--INVALID INPUT: Year Does Not Exist--" << endl;
         cout << endl << "[FORMAT: 00/00/0000]" << endl;
         cout << "ENTER DATE OF BIRTH: ";
-        cin >> input;
+        getline(cin,input);
         delExtraChar(input);
         temp = input.substr(4, 4);
         year = stoi(temp);
@@ -149,7 +168,7 @@ bool validateYear(string& input){ //function that checks if the Year is valid
     return true;
 }
 
-bool validateUsername(string input){ //function that checks a Username for special characters
+bool checkAlNum(string input){ //function that checks a Username for special characters
     int i;
     for (i = 0; i < input.length(); i++){
         if (isalnum(input[i]) == 0){
@@ -201,7 +220,7 @@ bool checkLogin(string usernameInput, string passwordInput){ //function that che
         }
     }
     else{
-        cout << "--File could not be opened--" << endl;
+        cout << "      --File could not be opened, register account--" << endl;
         return false;
     }
 
@@ -219,49 +238,84 @@ bool checkLogin(string usernameInput, string passwordInput){ //function that che
     return false;
 }
 
+bool checkEmail(string email){
+    int dotCheck = -1, atCheck = -1, i;
+    for (i = 0; i < email.length(); i++){
+        if (email[i] == '@'){
+            atCheck = i;
+        }
+        else if (email[i] == '.'){
+            dotCheck = i;
+        }
+    }
+    if (atCheck == -1 || dotCheck == -1){
+        cout << endl << "INVALID INPUT: Not A Valid Email" << endl;
+        return false;
+    }
+    if (atCheck > dotCheck){
+        cout << endl << "INVALID INPUT: Not A Valid Email" << endl;
+        return false;
+    }
+    return !(dotCheck >= (email.length()) - 1);
+}
+
 string setUsername(){ //function that asks for user Username input
     string input;
     do{    
         cout << "ENTER USERNAME: ";
         getline(cin, input);
-    }while (validateUsername(input) != 1 || usernameExists(input) != 1);
+        while (input.length() < 3 || input.length() > 50){
+            cout << endl << "INVALID INPUT: Username must be more than 2 characters and less than 50 characters" << endl;
+            cout << "ENTER USERNAME: ";
+            getline(cin, input);
+        }
+    }while (checkAlNum(input) != 1 || usernameExists(input) != 1);
     return input;
 }
 
 string setPassword(){ //function that asks for user Password input
     string input;
     int i = 0;
-    char c;
     cout << endl << "ENTER PASSWORD: ";
     getline(cin, input);
+    while (input.length() < 3 || input.length() > 50){
+        cout << endl << "INVALID INPUT: Password must be more than 2 character and less than 50 characters" << endl;
+        cout << "ENTER USERNAME: ";
+        getline(cin, input);
+    }
     return input;
 }
 
 string setFirstName(){ //function that asks for user First Name input
     string input;
     cout << endl << "ENTER FIRST NAME: ";
-    cin >> input;
+    getline(cin, input);
+    while (!checkAlNum(input)){
+        cout << endl << "ENTER FIRST NAME: ";
+        getline(cin, input);
+    }
     return input;
 }
 
 string setLastName(){ //function that asks for user Last Name input
     string input;
     cout << endl << "ENTER LAST NAME: ";
-    cin >> input;
+    getline(cin, input);
+    while (!checkAlNum(input)){
+        cout << endl << "ENTER LAST NAME: ";
+        getline(cin, input);
+    }
     return input;
 }
 
 string setEmail(){ //function that asks for user Email input
     string input;
     bool findAt;
-    cout << endl << "ENTER EMAIL: ";
-    cin >> input;
-    findAt = input.find('@') != string::npos;
-    while (findAt == false){
-        cout << endl << "EMAIL DOES NOT EXIST" << endl;
-        cout << endl << "ENTER EMAIL: ";
-        cin >> input;
-        findAt = input.find('@') != string::npos;
+    cout << endl << "ENTER NEW EMAIL: ";
+    getline(cin, input);
+    while (!checkEmail(input)){
+        cout << endl << "ENTER NEW EMAIL: ";
+        getline(cin, input);
     }
     return input;
 }
@@ -284,7 +338,6 @@ bool phoneNumberCheck(string& input){
 string setPhoneNumber(){ //function that asks for user Phone Number input
     string input, first3string, second3string, final4string, phoneIntReturn;
     int check = 0, check2 = 0;
-    keyboardBuffer();
     cout << endl << "[FORMAT: 000 000 0000]";
     cout << endl << "ENTER PHONE NUMBER: ";
     getline(cin, input);
@@ -320,8 +373,15 @@ string setDOB(){ //function that asks for user DOB input
     getline(cin, input);
     delExtraChar(input);
 
-    while(temp != 5){
+    while(temp != 6){
         temp = 0;
+        if (checkAlNum(input)){
+            temp ++;
+        }
+        else{
+            cout << endl << "[FORMAT: 00/00/0000]" << endl;
+            cout << "ENTER DATE OF BIRTH: ";
+        }
         if (validateNumbers(input)){
             temp ++;
         }
@@ -355,7 +415,7 @@ void addUser(string userUsername, string userPassword, string userFirstName, str
     fileCredentials.open("users.txt", ios::app);
     if (fileCredentials.is_open()){
         fileCredentials << userUsername << endl << userPassword << endl << userFirstName << endl << userLastName << endl << userEmail << endl << userPhoneNumber << endl << userDOB << "\n" << "\n";
-        cout << endl << endl << "             --REGISTRATION COMPLETE--" << endl << endl << endl;
+        cout << endl << endl << "              --REGISTRATION  COMPLETE--" << endl << endl << endl;
     }
     else{
         cout << "--File could not be opened--" << endl;
@@ -368,6 +428,10 @@ void setUserInformation(){ //function that calls functions to collect user infor
     string userUsername, userPassword, userFirstName, userLastName, userEmail, userDOB, userPhoneNumber;
     cout << endl << "                 --REGISTRATION--"<< endl;
     cout << "---------------------------------------------------" << endl << endl;
+    if(!checkForUsersFile()){
+        ofstream requiredFile("users.txt");
+        requiredFile.close();
+    }
     userUsername = setUsername();
     userPassword = setPassword();
     userFirstName = setFirstName();
@@ -384,9 +448,9 @@ bool login(){ //function that accepts user input for Username and Password
     cout << endl << "                    --LOGIN--" << endl;
     cout << "---------------------------------------------------" << endl << endl;
     cout << "ENTER USERNAME: ";
-    cin >> usernameInput;
-    cout << "ENTER PASSWORD: ";
-    cin >> passwordInput;
+    getline(cin, usernameInput);
+    cout << endl << "ENTER PASSWORD: ";
+    getline(cin, passwordInput);
     
     if (checkLogin(usernameInput, passwordInput)){
         cout << endl << endl << "               --LOGIN SUCCESSFUL--" << endl << endl;
@@ -404,6 +468,7 @@ bool tryAgain(){ //function that is called after a failed attempt
     cout << "TRY ON MORE TIME? [Y/N]: ";
     cin >> choice;
     if (choice == 'y' || choice == 'Y'){
+        keyboardBuffer();
         return true;
     }
     else{
@@ -500,7 +565,7 @@ bool changePassword(){ //function to change user Password
 
     cout << endl << "         --CHANGE PASSWORD--" << endl;
     cout << "ENTER USERNAME: ";
-    cin >> usernameInput;
+    getline(cin, usernameInput);
 
     while (i <= txtCredentials.size()){
         if (usernameInput != txtCredentials[i]){
@@ -519,38 +584,27 @@ bool changePassword(){ //function to change user Password
     cout << endl << "         --USERNAME FOUND--" << endl << endl;
     cout << "     --Names are case sensitive--" << endl;
     cout << "ENTER FIRST NAME: ";
-    cin >> firstName;
+    getline(cin, firstName);
     cout << "ENTER LAST NAME: ";
-    cin >> lastName;
+    getline(cin, lastName);
     cout << "ENTER EMAIL: ";
-    cin >> email;
+    getline(cin, email);
     
     if (firstName == txtCredentials[i + 2] && lastName == txtCredentials[i + 3] && email == txtCredentials[i + 4]){
-        cout << endl << " --FIRST NAME, LAST NAME AND EMAIL MATCHES--" << endl << endl;
-        cout << "ENTER NEW PASSWORD: ";
-        cin >> newPassword;
+        cout << endl << " --FIRST NAME, LAST NAME AND EMAIL MATCHES--" << endl;
+        newPassword = setPassword();
     }
     else{
         cout << endl << "--First Name, Last Name, and email do not match--" << endl << endl << endl;
         return false;
     }
 
-    ofstream fileCredentialsWrite;
-    fileCredentialsWrite.open ("users.txt");
-    if (fileCredentialsWrite.fail()){
-        cout << "--File could not be opened--" << endl;
-        return false;
+    if(!changeDataFunction(txtCredentials, newPassword, passwordIndex)){
+        cout << " --ERROR HAS OCCURRED--" << endl;
     }
-    for (i = 0; i < txtCredentials.size(); i++){
-        if (i != passwordIndex){
-            fileCredentialsWrite << txtCredentials[i] << endl;
-        }
-        else{
-            fileCredentialsWrite << newPassword << endl;
-        }
+    else{
+        cout << endl << endl << "        --PASSWORD CHANGED--" << endl << endl << endl;
     }
-    fileCredentialsWrite.close();
-    cout << endl << endl << "        --PASSWORD CHANGED--" << endl << endl << endl;
     return true;
 }
 
@@ -592,29 +646,15 @@ bool changeUsername(){ //function to change user Username
     }
     cout << endl << "         --USERNAME MATCHES--" << endl << endl;
 
-    do{
-        cout << "ENTER NEW USERNAME: ";
-        getline(cin, newUsername);
-    }while (validateUsername(newUsername) != 1 || usernameExists(newUsername) != 1);
+    newUsername = setUsername();
 
-
-    ofstream fileCredentialsWrite;
-    fileCredentialsWrite.open("users.txt");
-    if (fileCredentialsWrite.fail()){
-        cout << "--File could not be opened--" << endl;
-        return false;
+    if(!changeDataFunction(txtCredentials, newUsername, usernameIndex)){
+        cout << " --ERROR HAS OCCURRED--" << endl;
     }
-    for (i = 0; i < txtCredentials.size(); i++){
-        if (i != usernameIndex){
-            fileCredentialsWrite << txtCredentials[i] << endl;
-        }
-        else{
-            fileCredentialsWrite << newUsername << endl;
-        }
+    else{
+        cout << endl << endl << "         --USERNAME CHANGED--" << endl << endl << endl;
     }
-    fileCredentialsWrite.close();
     globalUsername = newUsername;
-    cout << endl << endl << "        --USERNAME CHANGED--" << endl << endl << endl;
     return true;
 }
 
@@ -622,15 +662,14 @@ bool changePhoneNumber(){ //function to change user Phone Number
     vector <string> txtCredentials;
     string usernameInput, newPhoneNumber, first3string, second3string, final4string, newPhoneWrite, line;
     int index, i = 0, check = 0;
-    cout << endl << "     --CHANGE PHONE NUMBER--" << endl;
+    cout << endl << "       --CHANGE PHONE NUMBER--" << endl;
     cout << endl << "ENTER USERNAME: ";
-    cin >> usernameInput;
-    keyboardBuffer();
+    getline(cin, usernameInput);
     if (usernameInput != globalUsername){
         cout << "USERNAME DOES NOT MATCH" << endl;
         return false;
     }
-    cout << endl << "        --USERNAME MATCHES--" << endl;
+    cout << endl << endl << "        --USERNAME MATCHES--";
     cout << endl << "[FORMAT: 000 000 0000]";
     cout << endl << "ENTER NEW PHONE NUMBER: ";
     getline (cin, newPhoneNumber);
@@ -678,21 +717,12 @@ bool changePhoneNumber(){ //function to change user Phone Number
 
     index = i + 5;
 
-    ofstream fileCredentialsWrite;
-    fileCredentialsWrite.open("users.txt");
-    if (fileCredentialsWrite.fail()){
-        cout << "--File could not be opened--" << endl;
-        return false;
+    if(!changeDataFunction(txtCredentials, newPhoneWrite, index)){
+        cout << " --ERROR HAS OCCURRED--" << endl;
     }
-    for (i = 0; i < txtCredentials.size(); i++){
-        if (i != index){
-            fileCredentialsWrite << txtCredentials[i] << endl;
-        }
-        else{
-            fileCredentialsWrite << newPhoneWrite << endl;
-        }
+    else{
+        cout << endl << endl << "      --PHONE NUMBER CHANGED--" << endl << endl << endl;
     }
-    cout << endl << endl << "    --PHONE NUMBER CHANGED--" << endl << endl << endl;
     return true;
 }
 
@@ -702,8 +732,7 @@ bool changeDOB(){ //function to change user DOB
     int i = 0, temp = 0, index;
     cout << endl << "     --CHANGE PHONE NUMBER--" << endl;
     cout << endl << "ENTER USERNAME: ";
-    cin >> usernameInput;
-    keyboardBuffer();
+    getline(cin, usernameInput);
     if (usernameInput != globalUsername){
         cout << "USERNAME DOES NOT MATCH" << endl;
         return false;
@@ -764,21 +793,63 @@ bool changeDOB(){ //function to change user DOB
 
     index = i + 6;
 
-    ofstream fileCredentialsWrite;
-    fileCredentialsWrite.open("users.txt");
-    if (fileCredentialsWrite.fail()){
+    if(!changeDataFunction(txtCredentials, DOB, index)){
+        cout << " --ERROR HAS OCCURRED--" << endl;
+    }
+    else{
+        cout << endl << endl << "   --DATE OF BIRTH CHANGED--" << endl << endl << endl;
+    }
+    return true;
+}
+
+bool changeEmail(){
+    vector <string> txtCredentials;
+    string passwordInput, usernameInput, line, newEmail;
+    int emailIndex, i = 0;
+
+    ifstream fileCredentials;
+    fileCredentials.open("users.txt");
+    if (fileCredentials.is_open()){
+        while (!fileCredentials.eof()){
+            while(getline(fileCredentials, line)){
+                txtCredentials.push_back(line);
+            }
+        }
+    }
+    else{
         cout << "--File could not be opened--" << endl;
         return false;
     }
-    for (i = 0; i < txtCredentials.size(); i++){
-        if (i != index){
-            fileCredentialsWrite << txtCredentials[i] << endl;
+    fileCredentials.close();
+    cout << endl << "           --CHANGE EMAIL--" << endl << endl;
+    cout << "ENTER CURRENT USERNAME: ";
+    getline(cin, usernameInput);
+    cout << "ENTER CURRENT PASSWORD: ";
+    getline(cin, passwordInput);
+
+    while (i <= txtCredentials.size()){
+        if (usernameInput != txtCredentials[i]){
+            i += 8;
         }
-        else{
-            fileCredentialsWrite << DOB << endl;
+        if (usernameInput == txtCredentials[i]){
+            break;
         }
     }
-    cout << endl << endl << "   --DATE OF BIRTH CHANGED--" << endl << endl << endl;
+    emailIndex = i + 4;
+
+    if (usernameInput != txtCredentials[i] || passwordInput != txtCredentials[i + 1]){
+        cout << endl << "  --USERNAME AND PASSWORD DOES NOT MATCH--" << endl << endl;
+        return false;
+    }
+    cout << endl << "    --USERNAME AND PASSWORD MATCHES--" << endl;
+    newEmail = setEmail();    
+
+    if(!changeDataFunction(txtCredentials, newEmail, emailIndex)){
+        cout << " --ERROR HAS OCCURRED--" << endl;
+    }
+    else{
+        cout << endl << endl << "           --EMAIL CHANGED--" << endl << endl << endl;
+    }
     return true;
 }
 
@@ -894,18 +965,36 @@ void changeDOBSystem(){
     }
 }
 
+void changeEmailSystem(){
+    if (changeEmail()){
+        //calls the function to change Date of Birth
+        return;
+    }
+    else{
+        if (tryAgain()){
+            //calls function if user wants to try to change DOB again after a failed attempt
+            changeEmail();
+            //calls the function to change Date of Birth
+        }
+        else{
+            return;
+        }
+    }
+}
+
 void loggedIntoSystem(){
     int input;
     do{
         cout << endl << "                  --SYSTEM MENU--"<< endl;
         cout << "---------------------------------------------------" << endl << endl;
-        cout << "          1 --> Display Personal Information" << endl;
-        cout << "          2 --> Change Username" << endl;
-        cout << "          3 --> Change Password" << endl;
-        cout << "          4 --> Change Phone Number" << endl;
-        cout << "          5 --> Change DOB" << endl;
-        cout << "          6 --> Delete Account" << endl;
-        cout << "          7 --> Log Out" << endl << endl;
+        cout << "    Input 1 --> Display Personal Information" << endl;
+        cout << "    Input 2 --> Change Username" << endl;
+        cout << "    Input 3 --> Change Password" << endl;
+        cout << "    Input 4 --> Change Email" << endl;
+        cout << "    Input 5 --> Change Phone Number" << endl;
+        cout << "    Input 6 --> Change DOB" << endl;
+        cout << "    Input 7 --> Delete Account" << endl;
+        cout << "    Input 8 --> Log Out" << endl << endl;
         input = loginSystemChoice();
         switch (input){
             case 1:{
@@ -921,19 +1010,23 @@ void loggedIntoSystem(){
                 break;
             }
             case 4:{
-                changePhoneNumberSystem(); //calls a function to change user Phone Number
+                changeEmailSystem(); //calls a function to change user Email
                 break;
             }
             case 5:{
-                changeDOBSystem(); //calls a function to change user DOB
+                changePhoneNumberSystem(); //calls a function to change user Phone Number
                 break;
             }
             case 6:{
+                changeDOBSystem(); //calls a function to change user DOB
+                break;
+            }
+            case 7:{
                 deleteAccount();
                 cout << endl << "                --ACCOUNT DELETED--" << endl << endl;
                 return;
             }
-            case 7:{
+            case 8:{
                 cout << "               --ACCOUNT LOGGED OUT--" << endl;
                 return;
             }
