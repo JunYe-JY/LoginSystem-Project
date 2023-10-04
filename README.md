@@ -7,11 +7,12 @@
 -    -> log in
 -    -> change password in the case that it has been forgotten
 - When logged in:
--  -> Allows users to choose from 7 options:
+-  -> Allows users to choose from 8 options:
 -    -> display their current data
 -    -> change Username
 -    -> change Password
+-    -> change Email
 -    -> change Phone Number
 -    -> change Date of Birth
--    -> delete their account
+-    -> delete account
 -    -> log out
